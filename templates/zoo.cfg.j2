@@ -1,0 +1,13 @@
+# MANAGED_BY_ANSIBLE
+clientPort=2181
+dataDir={{zookeeper_data_dir}}
+maxClientCnxns=60
+tickTime=2000
+{% if zoo_servers | length %}
+initLimit=5
+syncLimit=2
+{% endif %}
+{% for ip in zoo_servers %}
+server.{{loop.index}}={{ip}}:2888:3888
+{% endfor %}
+# end

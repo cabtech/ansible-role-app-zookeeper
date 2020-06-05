@@ -1,0 +1,113 @@
+---
+# --------------------------------
+
+- name: 'Zookeeper user'
+  group:
+    name: '{{zookeeper_user}}'
+    state: present
+  become: true
+  tags: ct-zookeeper
+
+- name: 'create Zookeeper staging dir'
+  file:
+    path: '{{zookeeper_staging_dir}}'
+    mode: '0755'
+    state: directory
+  tags:
+  - ct-zookeeper
+
+- name: 'create Zookeeper install dir'
+  file:
+    path: '{{zookeeper_install_dir}}'
+    mode: '0755'
+    state: directory
+  become: true
+  tags:
+  - ct-zookeeper
+
+- name: 'create Zookeeper data dir'
+  file:
+    path: '{{zookeeper_data_dir}}'
+    mode: '0755'
+    owner: '{{zookeeper_user}}'
+    group: '{{zookeeper_user}}'
+    state: directory
+  become: true
+  tags:
+  - ct-zookeeper
+
+- name: 'create Zookeeper logs dir'
+  file:
+    path: '{{zookeeper_logs_dir}}'
+    mode: '0755'
+    owner: '{{zookeeper_user}}'
+    group: '{{zookeeper_user}}'
+    state: directory
+  become: true
+  tags:
+  - ct-zookeeper
+
+- name: 'download Zookeeper archive'
+  get_url:
+    url: '{{zookeeper_url}}'
+    dest: '{{zookeeper_staging_dir}}'
+    timeout: '{{zookeeper_internet_timeout}}'
+    validate_certs: false
+  tags:
+  - ct-zookeeper
+
+- name: 'expand Zookeeper archive'
+  unarchive:
+    src: '{{zookeeper_staging_dir}}/{{zookeeper_tarball}}'
+    copy: false
+    dest: '{{zookeeper_install_dir}}'
+    extra_opts: ['--strip-components=1']
+  become: true
+  ignore_errors: '{{ansible_check_mode}}'
+  tags:
+  - ct-zookeeper
+
+- name: 'Render Zookeeper config file'
+  template:
+    src: zoo.cfg.j2
+    dest: '{{zookeeper_config_dir}}/zoo.cfg'
+    mode: '0644'
+  become: true
+  ignore_errors: '{{ansible_check_mode}}'
+  tags:
+  - ct-zookeeper
+
+- name: 'Render Zookeeper myid file'
+  template:
+    src: myid.j2
+    dest: '{{zookeeper_data_dir}}/myid'
+    mode: '0644'
+  become: true
+  ignore_errors: '{{ansible_check_mode}}'
+  tags:
+  - ct-zookeeper
+
+- name: 'render Systemd unit file'
+  template:
+    src: zookeeper.service.j2
+    dest: /etc/systemd/system/zookeeper.service
+    owner: root
+    group: root
+    mode: '0600'
+  register: reg_service
+  become: true
+  tags:
+  - ct-zookeeper
+
+- name: 'enable Zookeeper service'
+  systemd:
+    name: zookeeper
+    state: '{{zookeeper_svc_state}}'
+    enabled: '{{zookeeper_svc_enabled}}'
+    daemon_reload: '{{reg_service is changed}}'
+  become: true
+  tags:
+  - ct-zookeeper
+
+# --------------------------------
+...

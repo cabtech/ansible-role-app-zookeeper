@@ -1,0 +1,6 @@
+{% set MYIP = hostvars[inventory_hostname]['ip_pri'] %}
+{% for ip in zoo_servers %}
+{% if MYIP == ip %}
+{{loop.index}}
+{% endif %}
+{% endfor %}
