@@ -1,8 +1,17 @@
 ---
 # --------------------------------
 
-- name: 'Zookeeper user'
+- name: 'Zookeeper group'
   group:
+    name: '{{zookeeper_user}}'
+    state: present
+  become: true
+  tags: ct-zookeeper
+
+- name: 'Zookeeper user'
+  user:
+    comment: 'Zookeeper'
+    group: '{{zookeeper_user}}'
     name: '{{zookeeper_user}}'
     state: present
   become: true
