@@ -1,16 +1,18 @@
 ---
+# --------------------------------
 
+zookeeper_config_dir: "{{ zookeeper_install_dir }}/conf"
 zookeeper_data_dir: /var/lib/zookeeper
 zookeeper_install_dir: /opt/zookeeper
 zookeeper_internet_timeout: 15
+zookeeper_logs_dir: "{{ zookeeper_install_dir }}/logs"
 zookeeper_staging_dir: /var/tmp/zookeeper
-zookeeper_user: zooq
 zookeeper_svc_enabled: true
 zookeeper_svc_state: started
-zookeeper_version: '3.6.1'
+zookeeper_tarball: "apache-zookeeper-{{ zookeeper_version }}-bin.tar.gz"
+zookeeper_url: "https://mirrors.ukfast.co.uk/sites/ftp.apache.org/zookeeper/zookeeper-{{ zookeeper_version }}/{{ zookeeper_tarball }}"
+zookeeper_user: zooq
+zookeeper_version: "3.6.1"
 
-zookeeper_config_dir: '{{zookeeper_install_dir}}/conf'
-zookeeper_logs_dir: '{{zookeeper_install_dir}}/logs'
-zookeeper_tarball: 'apache-zookeeper-{{zookeeper_version}}-bin.tar.gz'
-zookeeper_url: 'https://mirrors.ukfast.co.uk/sites/ftp.apache.org/zookeeper/zookeeper-{{zookeeper_version}}/{{zookeeper_tarball}}'
+# --------------------------------
 ...

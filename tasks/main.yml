@@ -1,110 +1,111 @@
 ---
 # --------------------------------
 
-- name: 'Zookeeper group'
-  group:
-    name: '{{zookeeper_user}}'
+- name: "Zookeeper group"
+  ansible.builtin.group:
+    name: "{{ zookeeper_user }}"
     state: present
   become: true
   tags: [ct-zookeeper]
 
-- name: 'Zookeeper user'
-  user:
-    comment: 'Zookeeper'
-    group: '{{zookeeper_user}}'
-    name: '{{zookeeper_user}}'
+- name: "Zookeeper user"
+  ansible.builtin.user:
+    comment: "Zookeeper"
+    group: "{{ zookeeper_user }}"
+    name: "{{ zookeeper_user }}"
     state: present
   become: true
   tags: ct-zookeeper
 
-- name: 'create Zookeeper staging dir'
-  file:
-    path: '{{zookeeper_staging_dir}}'
-    mode: '0755'
+- name: "Create Zookeeper staging dir"
+  ansible.builtin.file:
+    mode: "0755"
+    path: "{{ zookeeper_staging_dir }}"
     state: directory
   tags: [ct-zookeeper]
 
-- name: 'create Zookeeper install dir'
-  file:
-    path: '{{zookeeper_install_dir}}'
-    mode: '0755'
-    state: directory
-  become: true
-  tags: [ct-zookeeper]
-
-- name: 'create Zookeeper data dir'
-  file:
-    path: '{{zookeeper_data_dir}}'
-    mode: '0755'
-    owner: '{{zookeeper_user}}'
-    group: '{{zookeeper_user}}'
+- name: "Create Zookeeper install dir"
+  ansible.builtin.file:
+    mode: "0755"
+    path: "{{ zookeeper_install_dir }}"
     state: directory
   become: true
   tags: [ct-zookeeper]
 
-- name: 'create Zookeeper logs dir'
-  file:
-    path: '{{zookeeper_logs_dir}}'
-    mode: '0755'
-    owner: '{{zookeeper_user}}'
-    group: '{{zookeeper_user}}'
+- name: "Create Zookeeper data dir"
+  ansible.builtin.file:
+    group: "{{ zookeeper_user }}"
+    mode: "0755"
+    owner: "{{ zookeeper_user }}"
+    path: "{{ zookeeper_data_dir }}"
     state: directory
   become: true
   tags: [ct-zookeeper]
 
-- name: 'download Zookeeper archive'
-  get_url:
-    dest: '{{zookeeper_staging_dir}}/{{zookeeper_tarball}}'
-    timeout: '{{zookeeper_internet_timeout}}'
-    url: '{{zookeeper_url}}'
+- name: "Create Zookeeper logs dir"
+  ansible.builtin.file:
+    group: "{{ zookeeper_user }}"
+    mode: "0755"
+    owner: "{{ zookeeper_user }}"
+    path: "{{ zookeeper_logs_dir }}"
+    state: directory
+  become: true
+  tags: [ct-zookeeper]
+
+- name: "Download Zookeeper archive"
+  ansible.builtin.get_url:
+    dest: "{{ zookeeper_staging_dir }}/{{ zookeeper_tarball }}"
+    mode: "0644"
+    timeout: "{{ zookeeper_internet_timeout }}"
+    url: "{{ zookeeper_url }}"
     validate_certs: false
   tags: [ct-zookeeper]
 
-- name: 'expand Zookeeper archive'
-  unarchive:
-    src: '{{zookeeper_staging_dir}}/{{zookeeper_tarball}}'
+- name: "Expand Zookeeper archive"
+  ansible.builtin.unarchive:
     copy: false
-    dest: '{{zookeeper_install_dir}}'
-    extra_opts: ['--strip-components=1']
+    dest: "{{ zookeeper_install_dir }}"
+    extra_opts: ["--strip-components=1"]
+    src: "{{ zookeeper_staging_dir }}/{{ zookeeper_tarball }}"
   become: true
-  ignore_errors: '{{ansible_check_mode}}'
+  ignore_errors: "{{ ansible_check_mode }}"
   tags: [ct-zookeeper]
 
-- name: 'Render Zookeeper config file'
-  template:
+- name: "Render Zookeeper config file"
+  ansible.builtin.template:
+    dest: "{{ zookeeper_config_dir }}/zoo.cfg"
+    mode: "0644"
     src: zoo.cfg.j2
-    dest: '{{zookeeper_config_dir}}/zoo.cfg'
-    mode: '0644'
   become: true
-  ignore_errors: '{{ansible_check_mode}}'
+  ignore_errors: "{{ ansible_check_mode }}"
   tags: [ct-zookeeper]
 
-- name: 'Render Zookeeper myid file'
-  template:
+- name: "Render Zookeeper myid file"
+  ansible.builtin.template:
+    dest: "{{ zookeeper_data_dir }}/myid"
+    mode: "0644"
     src: myid.j2
-    dest: '{{zookeeper_data_dir}}/myid'
-    mode: '0644'
   become: true
-  ignore_errors: '{{ansible_check_mode}}'
+  ignore_errors: "{{ ansible_check_mode }}"
   tags: [ct-zookeeper]
 
-- name: 'render Systemd unit file'
-  template:
-    src: zookeeper.service.j2
+- name: "Render Systemd unit file"
+  ansible.builtin.template:
     dest: /etc/systemd/system/zookeeper.service
-    owner: root
     group: root
-    mode: '0600'
+    mode: "0644"
+    owner: root
+    src: zookeeper.service.j2
   register: reg_service
   become: true
   tags: [ct-zookeeper]
 
-- name: 'enable Zookeeper service'
-  systemd:
+- name: "Enable Zookeeper service"
+  ansible.builtin.systemd:
+    daemon_reload: "{{ reg_service is changed }}"
+    enabled: "{{ zookeeper_svc_enabled }}"
     name: zookeeper
-    state: '{{zookeeper_svc_state}}'
-    enabled: '{{zookeeper_svc_enabled}}'
-    daemon_reload: '{{reg_service is changed}}'
+    state: "{{ zookeeper_svc_state }}"
   become: true
   tags: [ct-zookeeper]
 
