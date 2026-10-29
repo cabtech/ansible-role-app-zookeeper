@@ -1,12 +1,29 @@
 ---
 # --------------------------------
 
+- name: "Include variables wrapper"
+  ansible.builtin.include_tasks:
+    file: variables.yml
+  tags: ["ct-zookeeper"]
+
+- name: "Disto/Family tasks (FF)"
+  ansible.builtin.include_tasks:
+    file: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+      - "{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'].split('.')[0] }}.yml"
+      - "{{ ansible_facts['distribution'] }}.yml"
+      - "{{ ansible_facts['os_family'] }}.yml"
+      - "default.yml"
+  tags: ["ct-zookeeper"]
+
 - name: "Zookeeper group"
   ansible.builtin.group:
     name: "{{ zookeeper_user }}"
     state: present
   become: true
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Zookeeper user"
   ansible.builtin.user:
@@ -15,14 +32,14 @@
     name: "{{ zookeeper_user }}"
     state: present
   become: true
-  tags: ct-zookeeper
+  tags: ["ct-zookeeper"]
 
 - name: "Create Zookeeper staging dir"
   ansible.builtin.file:
     mode: "0755"
     path: "{{ zookeeper_staging_dir }}"
     state: directory
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Create Zookeeper install dir"
   ansible.builtin.file:
@@ -30,7 +47,7 @@
     path: "{{ zookeeper_install_dir }}"
     state: directory
   become: true
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Create Zookeeper data dir"
   ansible.builtin.file:
@@ -40,7 +57,7 @@
     path: "{{ zookeeper_data_dir }}"
     state: directory
   become: true
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Create Zookeeper logs dir"
   ansible.builtin.file:
@@ -50,7 +67,7 @@
     path: "{{ zookeeper_logs_dir }}"
     state: directory
   become: true
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Download Zookeeper archive"
   ansible.builtin.get_url:
@@ -59,7 +76,7 @@
     timeout: "{{ zookeeper_internet_timeout }}"
     url: "{{ zookeeper_url }}"
     validate_certs: false
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Expand Zookeeper archive"
   ansible.builtin.unarchive:
@@ -69,7 +86,7 @@
     src: "{{ zookeeper_staging_dir }}/{{ zookeeper_tarball }}"
   become: true
   ignore_errors: "{{ ansible_check_mode }}"
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Render Zookeeper config file"
   ansible.builtin.template:
@@ -78,7 +95,7 @@
     src: zoo.cfg.j2
   become: true
   ignore_errors: "{{ ansible_check_mode }}"
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Render Zookeeper myid file"
   ansible.builtin.template:
@@ -87,7 +104,7 @@
     src: myid.j2
   become: true
   ignore_errors: "{{ ansible_check_mode }}"
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Render Systemd unit file"
   ansible.builtin.template:
@@ -98,7 +115,7 @@
     src: zookeeper.service.j2
   register: reg_service
   become: true
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 - name: "Enable Zookeeper service"
   ansible.builtin.systemd:
@@ -107,7 +124,7 @@
     name: zookeeper
     state: "{{ zookeeper_svc_state }}"
   become: true
-  tags: [ct-zookeeper]
+  tags: ["ct-zookeeper"]
 
 # --------------------------------
 ...
